@@ -40,6 +40,9 @@ if 'logged_in' not in st.session_state:
 if 'form_counter' not in st.session_state:
     st.session_state.form_counter = 0
 
+if 'success_msg' not in st.session_state:
+    st.session_state.success_msg = ""
+
 # --- FUNGSI KONVERSI LOGO KE BASE64 ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -50,9 +53,9 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
-# --- BANNER UTAMA (TEKS DIPERBESAR & PROPORSI LOGO MENYESUAIKAN) ---
-banner_bg = "#1e293b"      # Warna latar belakang banner (Slate gelap elegan)
-border_color = "#334155"   # Warna garis tepi banner
+# --- BANNER UTAMA ---
+banner_bg = "#1e293b"      
+border_color = "#334155"   
 
 logo_element = f"<img src='data:image/png;base64,{logo_b64}' style='width: 135px; height: auto; border-radius: 8px; display: block;'/>" if logo_b64 else "<div style='font-size: 60px;'>🏆</div>"
 
@@ -80,7 +83,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- NAVIGASI MENU DI HALAMAN UTAMA (DI BAWAH BANNER) ---
+# --- NAVIGASI MENU DI HALAMAN UTAMA ---
 menu = st.radio(
     "🧭 Pilih Menu Navigasi", 
     ["Form Pendataan Peserta", "Dashboard & Rekapitulasi Data"], 
@@ -88,7 +91,7 @@ menu = st.radio(
 )
 st.markdown("---")
 
-# --- DATA REFERENSI SEKOLAH BERDASARKAN DAPODIK (KABUPATEN BANGKALAN) ---
+# --- DATA REFERENSI SEKOLAH ---
 sma_negeri = [
     'SMA NEGERI 1 AROSBAYA BANGKALAN', 'SMA NEGERI 1 BANGKALAN', 'SMA NEGERI 1 BLEGA BANGKALAN', 
     'SMA NEGERI 1 KAMAL BANGKALAN', 'SMA NEGERI 1 KOKOP BANGKALAN', 'SMA NEGERI 1 KWANYAR BANGKALAN', 
@@ -140,7 +143,6 @@ slb_swasta = [
     'SLB PGRI', 'SLB SAMUDRA LAVENDER', 'SLB SAMUDRA TERRA ATHENA'
 ]
 
-# --- DATA REFERENSI KATEGORI LOMBA ---
 kategori_lomba_options = [
     "Guru Impresif",
     "Kepala Sekolah Inovatif",
@@ -153,7 +155,13 @@ kategori_lomba_options = [
 if menu == "Form Pendataan Peserta":
     st.subheader("📝 Formulir Pendataan Peserta Lomba Inovasi")
     
-    fc = st.session_state.form_counter  # Counter dinamis untuk mereset form
+    # Tampilkan pesan sukses jika ada dari penyimpanan sebelumnya
+    if st.session_state.success_msg:
+        st.success(st.session_state.success_msg)
+        st.balloons()
+        st.session_state.success_msg = "" # Reset setelah ditampilkan
+        
+    fc = st.session_state.form_counter  
     
     col1, col2 = st.columns(2)
     
@@ -165,7 +173,6 @@ if menu == "Form Pendataan Peserta":
             key=f"select_institusi_{fc}"
         )
         
-        # Sinkronisasi Nama Institusi/Sekolah Berdasarkan Pilihan (Dropdown Sesuai Data Dapodik)
         if institusi == "SMA Negeri":
             nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", sma_negeri, key=f"sekolah_sma_n_{fc}")
         elif institusi == "SMA Swasta":
@@ -218,16 +225,14 @@ if menu == "Form Pendataan Peserta":
                 st.session_state.data_peserta.append(data_baru)
                 save_data_to_csv(st.session_state.data_peserta)
             
-            # 2. Notifikasi Saat Data Berhasil Disimpan
-            st.success(f"✅ Data peserta atas nama **{nama_peserta}** berhasil disimpan secara permanen!")
-            st.toast("Data berhasil disimpan!", icon="✅")
-            st.balloons()
+            # Simpan pesan sukses ke session state agar tampil setelah rerun
+            st.session_state.success_msg = f"✅ Data peserta atas nama **{nama_peserta}** berhasil disimpan secara permanen!"
             
             # Increment counter form untuk mereset form agar kosong kembali
             st.session_state.form_counter += 1
             st.rerun()
 
-# --- MENU 2: DASHBOARD & REKAPITULASI DATA (DENGAN LOGIN) ---
+# --- MENU 2: DASHBOARD & REKAPITULASI DATA ---
 elif menu == "Dashboard & Rekapitulasi Data":
     if not st.session_state.logged_in:
         st.subheader("🔐 Login Akses Administrator")
@@ -244,9 +249,8 @@ elif menu == "Dashboard & Rekapitulasi Data":
                     st.success("Login berhasil! Memuat dashboard...")
                     st.rerun()
                 else:
-                    st.error("Username atau Password salah! (Default: admin / gempita2026)")
+                    st.error("Username atau Password salah!")
     else:
-        # Tombol Logout di bagian atas dashboard
         col_title, col_logout = st.columns([0.8, 0.2])
         with col_title:
             st.subheader("📊 Dashboard Pemantauan & Rekapitulasi Keikutsertaan")
@@ -260,7 +264,6 @@ elif menu == "Dashboard & Rekapitulasi Data":
         else:
             df = pd.DataFrame(st.session_state.data_peserta)
             
-            # Metrik Ringkasan
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("Total Pendaftar", len(df))
             col2.metric("Sudah Upload", len(df[df["Keterangan"] == "Sudah Upload"]))
@@ -269,7 +272,6 @@ elif menu == "Dashboard & Rekapitulasi Data":
             
             st.markdown("---")
             
-            # Grafik Visualisasi Statistik dengan Warna Berbeda per Kategori (Plotly)
             st.markdown("### 📈 Grafik Statistik Keikutsertaan")
             col_chart1, col_chart2 = st.columns(2)
             
@@ -292,7 +294,6 @@ elif menu == "Dashboard & Rekapitulasi Data":
             st.markdown("---")
             st.markdown("### 📋 Daftar Seluruh Peserta Terdaftar")
             
-            # Filter Interaktif Berdasarkan Institusi & Nama Instansi
             col_f1, col_f2 = st.columns(2)
             
             with col_f1:
@@ -308,19 +309,16 @@ elif menu == "Dashboard & Rekapitulasi Data":
                 
                 filter_nama_sekolah = st.selectbox("Filter Berdasarkan Nama Spesifik Instansi/Sekolah", list_nama)
                 
-            # Terapkan Filter ke DataFrame
             df_filtered = df.copy()
             if filter_institusi != "Semua Institusi":
                 df_filtered = df_filtered[df_filtered["Institusi/Sekolah"] == filter_institusi]
             if filter_nama_sekolah != "Semua Instansi/Sekolah":
                 df_filtered = df_filtered[df_filtered["Nama Institusi/Sekolah"] == filter_nama_sekolah]
                 
-            # Atur Indeks Tabel Dimulai dari Angka 1 untuk Tampilan
             df_display = df_filtered.copy()
             df_display.index = range(1, len(df_display) + 1)
             st.dataframe(df_display, use_container_width=True)
             
-            # Tombol Unduh Format Excel (.xlsx)
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_filtered.to_excel(writer, index=False, sheet_name='Rekap Peserta Gempita')
@@ -334,7 +332,6 @@ elif menu == "Dashboard & Rekapitulasi Data":
                 use_container_width=True
             )
             
-            # Tombol Reset Data (Hanya Muncul Jika Admin Sudah Login)
             st.markdown("---")
             if st.button("🗑️ Hapus Semua Data Tersimpan", type="primary", use_container_width=True):
                 st.session_state.data_peserta = []
