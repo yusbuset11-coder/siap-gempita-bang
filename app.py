@@ -155,11 +155,10 @@ kategori_lomba_options = [
 if menu == "Form Pendataan Peserta":
     st.subheader("📝 Formulir Pendataan Peserta Lomba Inovasi")
     
-    # Tampilkan pesan sukses jika ada dari penyimpanan sebelumnya
     if st.session_state.success_msg:
         st.success(st.session_state.success_msg)
         st.balloons()
-        st.session_state.success_msg = "" # Reset setelah ditampilkan
+        st.session_state.success_msg = ""
         
     fc = st.session_state.form_counter  
     
@@ -210,7 +209,6 @@ if menu == "Form Pendataan Peserta":
         elif not judul_karya:
             st.error("Gagal menyimpan! Judul Karya wajib diisi.")
         else:
-            # 1. Indikator Loading Saat Menyimpan Data
             with st.spinner("Sedang memproses dan menyimpan data peserta, mohon tunggu..."):
                 data_baru = {
                     "Waktu Input": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -225,10 +223,7 @@ if menu == "Form Pendataan Peserta":
                 st.session_state.data_peserta.append(data_baru)
                 save_data_to_csv(st.session_state.data_peserta)
             
-            # Simpan pesan sukses ke session state agar tampil setelah rerun
             st.session_state.success_msg = f"✅ Data peserta atas nama **{nama_peserta}** berhasil disimpan secara permanen!"
-            
-            # Increment counter form untuk mereset form agar kosong kembali
             st.session_state.form_counter += 1
             st.rerun()
 
@@ -331,6 +326,23 @@ elif menu == "Dashboard & Rekapitulasi Data":
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
+            
+            # --- FITUR HAPUS DATA PESERTA TERTENTU ---
+            st.markdown("---")
+            st.markdown("### 🗑️ Hapus Data Peserta Tertentu")
+            
+            list_pilihan_hapus = [f"{row['Nama Peserta']} — {row['Judul Karya']} ({row['Waktu Input']})" for row in st.session_state.data_peserta]
+            peserta_terpilih = st.selectbox("Pilih Data Peserta yang Ingin Dihapus", ["-- Pilih Data --"] + list_pilihan_hapus)
+            
+            if peserta_terpilih != "-- Pilih Data --":
+                if st.button("Hapus Data Terpilih", type="primary", use_container_width=True):
+                    st.session_state.data_peserta = [
+                        row for row in st.session_state.data_peserta 
+                        if f"{row['Nama Peserta']} — {row['Judul Karya']} ({row['Waktu Input']})" != peserta_terpilih
+                    ]
+                    save_data_to_csv(st.session_state.data_peserta)
+                    st.success(f"Data **{peserta_terpilih}** berhasil dihapus!")
+                    st.rerun()
             
             st.markdown("---")
             if st.button("🗑️ Hapus Semua Data Tersimpan", type="primary", use_container_width=True):
