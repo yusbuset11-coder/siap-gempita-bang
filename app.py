@@ -324,9 +324,21 @@ elif menu == "Dashboard & Rekapitulasi Data":
             df_display.index = range(1, len(df_display) + 1)
             st.dataframe(df_display, use_container_width=True)
             
+            # --- EXPORT EXCEL DENGAN AUTO-FIT KOLOM ---
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_filtered.to_excel(writer, index=False, sheet_name='Rekap Peserta Gempita')
+                
+                # Mengatur lebar kolom agar menyesuaikan isi teks secara otomatis
+                worksheet = writer.sheets['Rekap Peserta Gempita']
+                for col in worksheet.columns:
+                    max_len = 0
+                    col_letter = col[0].column_letter
+                    for cell in col:
+                        if cell.value is not None:
+                            max_len = max(max_len, len(str(cell.value)))
+                    worksheet.column_dimensions[col_letter].width = max(max_len + 4, 12)
+                    
             excel_data = output.getvalue()
             
             st.download_button(
