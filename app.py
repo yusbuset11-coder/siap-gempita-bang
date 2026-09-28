@@ -329,7 +329,6 @@ elif menu == "Dashboard & Rekapitulasi Data":
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df_filtered.to_excel(writer, index=False, sheet_name='Rekap Peserta Gempita')
                 
-                # Mengatur lebar kolom agar menyesuaikan isi teks secara otomatis
                 worksheet = writer.sheets['Rekap Peserta Gempita']
                 for col in worksheet.columns:
                     max_len = 0
@@ -349,6 +348,53 @@ elif menu == "Dashboard & Rekapitulasi Data":
                 use_container_width=True
             )
             
+            # --- FITUR EDIT DATA PESERTA ---
+            st.markdown("---")
+            st.markdown("### ✏️ Edit Data Peserta")
+            
+            list_pilihan_edit = [f"{row['Nama Peserta']} — {row['Judul Karya']} ({row['Waktu Input']})" for row in st.session_state.data_peserta]
+            peserta_edit_pilihan = st.selectbox("Pilih Data Peserta yang Ingin Diedit", ["-- Pilih Data --"] + list_pilihan_edit)
+            
+            if peserta_edit_pilihan != "-- Pilih Data --":
+                idx_target = -1
+                for i, row in enumerate(st.session_state.data_peserta):
+                    if f"{row['Nama Peserta']} — {row['Judul Karya']} ({row['Waktu Input']})" == peserta_edit_pilihan:
+                        idx_target = i
+                        break
+                
+                if idx_target != -1:
+                    rec = st.session_state.data_peserta[idx_target]
+                    with st.form("form_edit_data"):
+                        st.markdown(f"**Edit Data untuk: {rec['Nama Peserta']}**")
+                        
+                        edit_nama = st.text_input("Nama Lengkap Peserta", value=rec['Nama Peserta'])
+                        
+                        list_jabatan_opsi = ["Pengawas Sekolah", "Kepala Sekolah", "Guru", "Tendik"]
+                        default_jabatan_idx = list_jabatan_opsi.index(rec['Jabatan']) if rec['Jabatan'] in list_jabatan_opsi else 2
+                        edit_jabatan = st.selectbox("Jabatan", list_jabatan_opsi, index=default_jabatan_idx)
+                        
+                        default_kategori_idx = kategori_lomba_options.index(rec['Kategori Lomba']) if rec['Kategori Lomba'] in kategori_lomba_options else 0
+                        edit_kategori = st.selectbox("Kategori Lomba", kategori_lomba_options, index=default_kategori_idx)
+                        
+                        edit_judul = st.text_input("Judul Karya", value=rec['Judul Karya'])
+                        
+                        list_ket_opsi = ["Sudah Daftar", "Sudah Upload"]
+                        default_ket_idx = list_ket_opsi.index(rec['Keterangan']) if rec['Keterangan'] in list_ket_opsi else 0
+                        edit_keterangan = st.selectbox("Keterangan", list_ket_opsi, index=default_ket_idx)
+                        
+                        submit_edit = st.form_submit_button("💾 Simpan Perubahan", use_container_width=True)
+                        
+                        if submit_edit:
+                            st.session_state.data_peserta[idx_target]['Nama Peserta'] = edit_nama
+                            st.session_state.data_peserta[idx_target]['Jabatan'] = edit_jabatan
+                            st.session_state.data_peserta[idx_target]['Kategori Lomba'] = edit_kategori
+                            st.session_state.data_peserta[idx_target]['Judul Karya'] = edit_judul
+                            st.session_state.data_peserta[idx_target]['Keterangan'] = edit_keterangan
+                            
+                            save_data_to_csv(st.session_state.data_peserta)
+                            st.success(f"✅ Data atas nama **{edit_nama}** berhasil diperbarui!")
+                            st.rerun()
+
             # --- FITUR HAPUS DATA PESERTA TERTENTU ---
             st.markdown("---")
             st.markdown("### 🗑️ Hapus Data Peserta Tertentu")
