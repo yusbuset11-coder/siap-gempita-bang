@@ -168,46 +168,56 @@ if menu == "Form Pendataan Peserta":
         st.markdown("#### **Informasi Umum**")
         institusi = st.selectbox(
             "Pilih Institusi/Sekolah", 
-            ["SMA Negeri", "SMA Swasta", "SMK Negeri", "SMK Swasta", "SLB Negeri", "SLB Swasta", "Pengawas Sekolah"],
+            ["-- Pilih Kategori Institusi --", "SMA Negeri", "SMA Swasta", "SMK Negeri", "SMK Swasta", "SLB Negeri", "SLB Swasta", "Pengawas Sekolah", "Lainnya"],
             key=f"select_institusi_{fc}"
         )
         
-        if institusi == "SMA Negeri":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", sma_negeri, key=f"sekolah_sma_n_{fc}")
+        if institusi == "-- Pilih Kategori Institusi --":
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Institusi Terlebih Dahulu --"], key=f"sekolah_empty_{fc}", disabled=True)
+        elif institusi == "SMA Negeri":
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + sma_negeri, key=f"sekolah_sma_n_{fc}")
         elif institusi == "SMA Swasta":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", sma_swasta, key=f"sekolah_sma_s_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + sma_swasta, key=f"sekolah_sma_s_{fc}")
         elif institusi == "SMK Negeri":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", smk_negeri, key=f"sekolah_smk_n_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + smk_negeri, key=f"sekolah_smk_n_{fc}")
         elif institusi == "SMK Swasta":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", smk_swasta, key=f"sekolah_smk_s_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + smk_swasta, key=f"sekolah_smk_s_{fc}")
         elif institusi == "SLB Negeri":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", slb_negeri, key=f"sekolah_slb_n_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + slb_negeri, key=f"sekolah_slb_n_{fc}")
         elif institusi == "SLB Swasta":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", slb_swasta, key=f"sekolah_slb_s_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + slb_swasta, key=f"sekolah_slb_s_{fc}")
         elif institusi == "Pengawas Sekolah":
-            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["Cabdin Bangkalan"], key=f"sekolah_pengawas_{fc}")
+            nama_sekolah = st.selectbox("Pilih Nama Institusi/Sekolah", ["-- Pilih Nama Sekolah --"] + ["Cabdin Bangkalan"], key=f"sekolah_pengawas_{fc}")
         else:
-            nama_sekolah = st.text_input("Ketikkan Nama Institusi/Sekolah", placeholder="Masukkan nama instansi...", key=f"sekolah_lain_input_{fc}")
+            nama_sekolah = st.text_input("Ketikkan Nama Institusi/Sekolah", placeholder="Ketikkan nama instansi...", key=f"sekolah_lain_input_{fc}")
             
         nama_peserta = st.text_input("Nama Lengkap Peserta (beserta gelar)", placeholder="Contoh: Yustinus Budi, M.Pd.", key=f"input_nama_peserta_{fc}")
-        jabatan = st.selectbox("Jabatan", ["Pengawas Sekolah", "Kepala Sekolah", "Guru", "Tendik"], key=f"select_jabatan_{fc}")
+        jabatan = st.selectbox("Jabatan", ["-- Pilih Jabatan --", "Pengawas Sekolah", "Kepala Sekolah", "Guru", "Tendik"], key=f"select_jabatan_{fc}")
 
     with col2:
         st.markdown("#### **Detail Lomba & Karya**")
-        kategori_lomba = st.selectbox("Kategori Lomba", kategori_lomba_options, key=f"select_kategori_{fc}")
+        kategori_lomba = st.selectbox("Kategori Lomba", ["-- Pilih Kategori Lomba --"] + kategori_lomba_options, key=f"select_kategori_{fc}")
         judul_karya = st.text_input("Judul Karya", placeholder="Ketikkan judul karya inovasi...", key=f"input_judul_karya_{fc}")
-        keterangan = st.selectbox("Keterangan", ["Sudah Daftar", "Sudah Upload"], key=f"select_keterangan_{fc}")
+        keterangan = st.selectbox("Keterangan", ["-- Pilih Keterangan --", "Sudah Daftar", "Sudah Upload"], key=f"select_keterangan_{fc}")
 
     st.markdown("---")
     submit_btn = st.button("💾 Simpan Data Peserta", use_container_width=True)
     
     if submit_btn:
-        if not nama_sekolah:
-            st.error("Gagal menyimpan! Nama Institusi/Sekolah wajib diisi.")
+        if institusi == "-- Pilih Kategori Institusi --":
+            st.error("Gagal menyimpan! Silakan pilih Kategori Institusi terlebih dahulu.")
+        elif not nama_sekolah or nama_sekolah in ["-- Pilih Nama Sekolah --", "-- Pilih Institusi Terlebih Dahulu --"]:
+            st.error("Gagal menyimpan! Nama Institusi/Sekolah wajib dipilih/diisi.")
         elif not nama_peserta:
             st.error("Gagal menyimpan! Nama Lengkap Peserta wajib diisi.")
+        elif jabatan == "-- Pilih Jabatan --":
+            st.error("Gagal menyimpan! Jabatan wajib dipilih.")
+        elif kategori_lomba == "-- Pilih Kategori Lomba --":
+            st.error("Gagal menyimpan! Kategori Lomba wajib dipilih.")
         elif not judul_karya:
             st.error("Gagal menyimpan! Judul Karya wajib diisi.")
+        elif keterangan == "-- Pilih Keterangan --":
+            st.error("Gagal menyimpan! Keterangan wajib dipilih.")
         else:
             with st.spinner("Sedang memproses dan menyimpan data peserta, mohon tunggu..."):
                 data_baru = {
